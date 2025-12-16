@@ -118,14 +118,17 @@ class Execute extends Module {
   // - JALR: (rs1 + immediate) & ~1 (register base, clear LSB for alignment)
   //
   // TODO: Complete the following address calculations
-  val branchTarget = io.instruction_address + io.immediate
+  // val branchTarget = io.instruction_address + io.immediate
+  val branchTarget = alu.io.result
 
   val jalTarget    = branchTarget  // JAL and Branch use same calculation method
 
   // JALR address calculation:
   //   1. Add register value and immediate
   //   2. Clear LSB (2-byte alignment)
-  val jalrSum      = io.reg1_data + io.immediate
+  // val jalrSum      = io.reg1_data + io.immediate
+
+  val jalrSum = alu.io.result
   // rs1 = io.reg1_data
   // TODO: Clear LSB using bit concatenation
   // Hint: Extract upper bits and append zero
