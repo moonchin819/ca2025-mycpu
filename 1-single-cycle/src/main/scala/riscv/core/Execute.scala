@@ -120,6 +120,8 @@ class Execute extends Module {
   // TODO: Complete the following address calculations
   // val branchTarget = io.instruction_address + io.immediate
   val branchTarget = alu.io.result
+  // This means when ALU is executing branch instruction, its only job is to calculate the target address to branch
+  // So we can just use the result of ALU as the branch target address
 
   val jalTarget    = branchTarget  // JAL and Branch use same calculation method
 
