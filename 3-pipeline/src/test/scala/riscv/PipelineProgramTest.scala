@@ -25,6 +25,57 @@ class PipelineProgramTest extends AnyFlatSpec with ChiselScalatestTester {
   for (cfg <- PipelineConfigs.All) {
     behavior.of(cfg.name)
 
+
+    it should "do q1_uf8 decode/encode from 0 to 255" in {
+      runProgram("q1_uf8.asmbin", cfg) { c =>
+      c.clock.setTimeout(0)
+        for (i <- 1 to 1000) {
+          c.clock.step(1000)
+        }
+        for (i <- 0 to 255) {
+          c.io.mem_debug_read_address.poke((4 + i * 8).U)
+          c.clock.step()
+          val input = c.io.mem_debug_read_data.peek().litValue
+          c.io.mem_debug_read_address.poke((8 + i * 8).U)
+          c.clock.step()
+          val encoded = c.io.mem_debug_read_data.peek().litValue
+
+          assert(input == encoded, s", Iteration $i: (input=$input) != (encoded = $encoded)")
+        }
+        c.io.mem_debug_read_address.poke(2052.U)
+        c.clock.step()
+        val testResult = c.io.mem_debug_read_data.peek().litValue
+        c.io.mem_debug_read_data.expect(1.U, s", q1_uf8 Test Failed : Result = $testResult")
+
+        c.io.regs_debug_read_address.poke(9.U)
+        c.io.regs_debug_read_data.expect(1.U)
+        }
+      }
+
+    it should "do fast rsqrt" in {
+      runProgram("rsqrt_org.asmbin", cfg) { c =>
+      c.clock.setTimeout(0)
+        for(i <- 1 to 250) {
+          c.clock.step(1000)
+        }        
+        val arr = Array(
+          65536, 32768, 16384, 13377, 7026, 3995, 2539
+        )
+        for (i <- 0 until arr.length) {
+          c.io.mem_debug_read_address.poke((8 + i * 4).U)
+          c.clock.step()
+          val result = c.io.mem_debug_read_data.peek().litValue
+
+          c.io.mem_debug_read_data.expect(arr(i).U)
+        }
+        c.io.mem_debug_read_address.poke(4.U)
+        c.clock.step()
+        
+        val testResult = c.io.mem_debug_read_data.peek().litValue
+        c.io.mem_debug_read_data.expect(1.U, s", fast rsqrt Test Failed : Result = $testResult")
+      }
+    }
+
     it should "calculate recursively fibonacci(10)" in {
       runProgram("fibonacci.asmbin", cfg) { c =>
         for (i <- 1 to 50) {
